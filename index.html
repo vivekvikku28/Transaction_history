@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>JS Issue Tracker</title>
+    <!-- Bootstrap -->
+    <!-- Latest compiled and minified CSS -->
+  
+
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body onload="fetchIssues()">
+    <div class="container">
+      <div class="main__header">
+
+        <div
+        style="margin-top:10px"
+        >
+
+            <img src='back.png' width='25px'>
+        </div>
+        
+        <div
+        class="user__icon"
+        >
+                V
+
+        </div>
+            
+        <div
+        class="user__details"
+        id="user__details"
+        >
+
+            <div
+            id="recipientname"
+            >
+                VIVEK
+            </div>
+            <div
+        id="recipientphone"
+            >
+                +91 9381323296
+            </div>
+                    
+        </div>
+                
+      </div>
+      <div
+      style="height:500px;display:flex;flex-direction:column;justify-content:flex-end; position:relative"
+      >
+      <div class="main__body"
+      id="main__body"
+      >
+          
+    <div class="loading__ring"><div></div><div></div><div></div><div></div></div>
+
+
+        </div>
+        </div>
+
+
+
+            
+  
+                </div>
+
+          </div>
+      </div>
+
+    </div>
+
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="http://chancejs.com/chance.min.js"></script>
+    <script
+      src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+      integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+      crossorigin="anonymous"
+    ></script>
+    <script src="main.js"></script>
+  </body>
+</html>
+
+
+<script>
+
+async function GetData(userId, recipientId){
+
+    url ="https://dev.onebanc.ai/assignment.asmx/GetTransactionHistory?userId="+userId+"&recipientId="+recipientId
+
+
+    fetch(url)
+    .then(response => response.json())
+    .then(data =>{
+        
+        console.log(1,data)
+    
+        //document.getElementById('user__details').innerHTML= recipientId
+        let paymentData = {}
+        
+        data.transactions?.forEach(function(item){
+            let d = new Date(item.startDate)
+            var datestr =  ("0" + d.getDate()).slice(-2) + "-" + ("0"+(d.getMonth()+1)).slice(-2) + "-" +
+            d.getFullYear()
+
+            console.log(Object.keys(paymentData), datestr)
+            if(Object.keys(paymentData).includes(datestr)){
+                let temp = [...paymentData[datestr]]
+                console.log('tmp',temp)
+
+                temp.push(item)
+                paymentData[datestr] =temp
+
+
+            }else{
+                let temp = []
+                temp.push(item)
+                paymentData[datestr] = temp
+
+            }
+
+
+            
+        })
+        var temp = ''
+
+        Object.keys(paymentData).forEach(function(datestr){
+
+
+            
+             temp = temp+`<div style="width:100%">`+` <div class="payment__body">
+                <div class='payment__timestamp'>
+                          <div
+                          class="date__line"
+                          >
+                      </div>
+                      <div
+                      class="payment__date"
+                      >
+                              
+                          `+ datestr +`
+                          </div>
+                          <div
+                          class="date__line"
+                          >
+                      </div>
+                  </div>
+  
+  `
+            
+            paymentData[datestr].map((item)=>{
+                d = new Date(item.startDate)
+                let datestring = ("0" + d.getDate()).slice(-2) + "-" + ("0"+(d.getMonth()+1)).slice(-2) + "-" +
+    d.getFullYear() + " " + ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
+                let tmp =  item?.direction == 1 ? (item.type == 1 ? 'You Paid' : 'You requested') : (item.type == 1 ? 'You received' : 'request requested')
+                let img1 = item.status == 2 ? `<img style="margin-right:5px" src="tick.png" width='10' height='10'>` : item.status == 1 ? `<img style="margin-right:5px" src="timer.png" width='10' height='10'>`:''
+                let paymentdetails = item?.direction == 1 ? "payment__details__right" :"payment__details"
+                let timestampDirection = item?.direction == 1 ? "timestamp__right" :"timestamp"
+                
+                let paymentActions=''
+                if(item.status == 2){
+                     paymentActions =  `<div class="payment__actions">
+                        <div>
+                            Transaction ID
+                        </div>
+                        <div>
+                            `+item.id +`
+                        </div>
+                    </div>
+                        
+                    <div>
+                        >
+                    </div>
+                    `
+
+                }
+                if(item.status == 3){
+                    paymentActions =  `<div class="payment__actions">
+                       <div>
+                          EXPIRED
+                       </div>
+                      
+                   </div>
+                       
+                   <div>
+                       >
+                   </div>
+                   `
+
+               }
+               if(item.status == 4){
+                paymentActions =  `<div class="payment__actions">
+                   <div>
+                      REJECTED
+                   </div>
+                  
+               </div>
+                   
+               <div>
+                   >
+               </div>
+               `
+
+           }
+           if(item.status == 5){
+            paymentActions =  `<div class="payment__actions">
+               <div>
+                  CANCELLED
+               </div>
+              
+           </div>
+               
+           <div>
+               >
+           </div>
+           `
+
+       }
+                if(item.status == 1){
+                    if(item.direction == 1)
+                    {
+                        paymentActions =  `<div class="payment__actions">
+                            <div>
+                               
+                                <button class='payment__action__button'> Cancel</button>
+    
+                            </div>
+                          
+                        </div>
+                            
+                        <div>
+                            >
+                        </div>
+                        `
+                    }
+                    else{
+                        paymentActions =  `<div class="payment__actions">
+                            <div>
+                                <button class='payment__action__button'> Pay</button>
+                                <button class='payment__action__button'> Decline</button>
+    
+                            </div>
+                          
+                        </div>
+                            
+                        <div>
+                            >
+                        </div>
+                        `
+                    }
+                    
+                }
+                
+                
+                temp  =temp +`
+                <div class=`+paymentdetails+`>
+                    <div
+                    class="payment__value"
+                    >
+                    <div>
+                        <span
+                        style="font-size:25px"
+                        >₹</span>
+                        <span
+                        style="font-size:30px"
+                        >
+                        `+item.amount +`
+                        </span>
+                        
+                        </div>
+                        <div
+                        style="
+                        display:flex;
+                        align-items:center
+                        "
+                        >
+                            `+img1+`
+                            <span
+                        style="font-size:10px"
+                            
+                            >
+                           `
+                           +
+                           tmp
+                           +
+                           `
+                
+                            </span>
+                            </div>
+                
+                        </div>
+                
+                    <div class="payment__status">
+                        `+paymentActions+`
+                
+                    </div>
+
+
+
+                        </div>
+                        <div class=`+timestampDirection+`>`+datestring+`</div>
+
+                    
+                
+                    `
+
+
+
+            })
+          
+            temp = temp + `</div></div>`
+
+            document.getElementById('main__body').innerHTML = temp   
+            document.getElementById('main__body').scrollTop =  document.getElementById('main__body').scrollHeight
+
+
+        })
+        console.log(paymentData)
+        //document.getElementById('main__body').innerHTML = temp 
+
+
+
+    })
+    .catch(error=>console.log(error))
+}
+GetData(1,2)
+</script>
+
+
